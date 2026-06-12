@@ -32,14 +32,22 @@
   `;
 
   const FRAG = `
+    /* phones run mediump as fp16 — use highp where the GPU offers it */
+    #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    #else
     precision mediump float;
+    #endif
     uniform vec2 u_res;
     uniform vec2 u_point;  /* laser source, y-down pixels */
     uniform float u_time;
     uniform sampler2D u_text;
 
+    /* fp16-safe hash (no huge sin arguments) */
     float hash(vec2 p) {
-      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+      p3 += dot(p3, p3.yzx + 33.33);
+      return fract((p3.x + p3.y) * p3.z);
     }
     float noise(vec2 p) {
       vec2 i = floor(p);
@@ -178,7 +186,9 @@
 
   let raf = 0;
   function frame(tms) {
-    const t = tms / 1000;
+    /* wrap time so shader sin() arguments never grow unbounded
+       (long sessions on fp16 GPUs lose precision otherwise) */
+    const t = (tms / 1000) % 600;
     /* left → right → left every 10s */
     const k = 0.5 - 0.5 * Math.cos(t * Math.PI * 2 / 10);
     gl.uniform2f(u.u_point, sweep.x0 + (sweep.x1 - sweep.x0) * k, sweep.y);
