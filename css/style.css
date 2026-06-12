@@ -129,69 +129,6 @@ img { display: block; max-width: 100%; }
   to   { filter: hue-rotate(35deg); }
 }
 
-/* Neon green laser hidden behind the logo, pointed straight at the
-   viewer and sweeping left to right behind the letters. The WebGL
-   version (js/laser.js) draws a head-on flare whose light is
-   ray-marched through the letterforms, backlighting each letter as
-   the source passes behind it. The CSS below is the reduced
-   fallback: a vertical beam sweeping across the same path. */
-@property --laser-x {
-  syntax: '<percentage>';
-  inherits: true;
-  initial-value: 50%;
-}
-.hero {
-  --laser-x: 50%;
-  --laser-y: 40%; /* height of the source = centre of the title block */
-  animation: laser-sweep 10s ease-in-out infinite;
-}
-@keyframes laser-sweep {
-  0%, 100% { --laser-x: 22%; }
-  50%      { --laser-x: 78%; }
-}
-.hero-laser-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-/* when the WebGL laser (js/laser.js) is running, it replaces the
-   CSS beam below */
-.laser-gl .hero-laser { display: none; }
-
-.hero-laser {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* vertical double-ended wedge sweeping horizontally */
-  background: conic-gradient(from -6deg at var(--laser-x) var(--laser-y),
-    rgba(57, 255, 20, 0) 0deg,
-    rgba(57, 255, 20, 0.5) 3deg,
-    rgba(234, 255, 208, 0.95) 6deg,
-    rgba(57, 255, 20, 0.5) 9deg,
-    rgba(57, 255, 20, 0) 12deg,
-    transparent 12deg 174deg,
-    rgba(57, 255, 20, 0) 174deg,
-    rgba(57, 255, 20, 0.5) 177deg,
-    rgba(234, 255, 208, 0.95) 180deg,
-    rgba(57, 255, 20, 0.5) 183deg,
-    rgba(57, 255, 20, 0) 186deg,
-    transparent 186deg 360deg);
-  /* hottest at the source, fading with distance */
-  -webkit-mask-image: radial-gradient(circle at var(--laser-x) var(--laser-y),
-    black 0%, rgba(0, 0, 0, 0.55) 35%, transparent 80%);
-  mask-image: radial-gradient(circle at var(--laser-x) var(--laser-y),
-    black 0%, rgba(0, 0, 0, 0.55) 35%, transparent 80%);
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-}
-
 .hero-kicker {
   font-family: var(--font-display);
   font-size: clamp(0.75rem, 2vw, 1rem);
@@ -208,18 +145,49 @@ img { display: block; max-width: 100%; }
   line-height: 0.95;
   display: flex;
   flex-direction: column;
-  /* 120bpm = one beat every 0.5s */
-  animation: beat-pulse 0.5s ease-out infinite;
+  /* 120bpm = one beat every 0.5s, joining in once the letters land */
+  animation: beat-pulse 0.5s ease-out 1.5s infinite;
 }
 @keyframes beat-pulse {
   0% { filter: brightness(1.4) saturate(1.25); transform: scale(1.018); }
   40% { filter: brightness(1) saturate(1); transform: scale(1); }
   100% { filter: brightness(1) saturate(1); transform: scale(1); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .hero,
-  .hero-title { animation: none; }
+
+/* On load each letter pops in left to right, flaring like its neon
+   tube just struck, then the title sits pulsating. --i is set per
+   letter in the markup. */
+.hero-title .line-1 span,
+.hero-title .line-2 span {
+  display: inline-block;
+  animation: letter-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i) * 70ms);
 }
+.hero-title .line-1 { --pop-glow: rgba(255, 46, 196, 0.9); }
+.hero-title .line-2 { --pop-glow: rgba(0, 229, 255, 0.9); }
+@keyframes letter-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+    filter: brightness(3) drop-shadow(0 0 28px var(--pop-glow));
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.18);
+    filter: brightness(1.9) drop-shadow(0 0 18px var(--pop-glow));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1) drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-title,
+  .hero-title .line-1 span,
+  .hero-title .line-2 span { animation: none; }
+}
+
 .hero-title .line-1 {
   font-size: clamp(3rem, 11vw, 8.5rem);
   color: var(--text);
@@ -230,11 +198,16 @@ img { display: block; max-width: 100%; }
 }
 .hero-title .line-2 {
   font-size: clamp(3rem, 11vw, 8.5rem);
+  filter: drop-shadow(0 0 22px rgba(0, 229, 255, 0.55));
+}
+/* the word's gradient, sliced per letter so each can animate alone */
+.hero-title .line-2 span {
   background: linear-gradient(90deg, var(--cyan), var(--pink), var(--orange));
+  background-size: 400% 100%;
+  background-position-x: calc((var(--i) - 7) / 3 * 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 22px rgba(0, 229, 255, 0.55));
 }
 
 .hero-sub {
