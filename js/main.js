@@ -118,3 +118,48 @@ form.addEventListener('submit', async (e) => {
     submitBtn.textContent = 'Count Me In! 🎉';
   }
 });
+
+/* ===== Mobile: highlight the accommodation option nearest the
+   centre of the viewport while scrolling ===== */
+const stayCards = Array.from(document.querySelectorAll('.stay-card'));
+const stayMobile = window.matchMedia('(max-width: 640px)');
+let stayTicking = false;
+
+function updateCurrentStay() {
+  stayTicking = false;
+  const mid = window.innerHeight / 2;
+  let closest = null;
+  let closestDist = Infinity;
+  for (const card of stayCards) {
+    const r = card.getBoundingClientRect();
+    const dist = Math.abs((r.top + r.bottom) / 2 - mid);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closest = card;
+    }
+  }
+  // only highlight while the stay section is actually around the centre
+  stayCards.forEach((card) => {
+    card.classList.toggle('is-current', card === closest && closestDist < mid);
+  });
+}
+
+function onStayScroll() {
+  if (!stayTicking) {
+    stayTicking = true;
+    requestAnimationFrame(updateCurrentStay);
+  }
+}
+
+function setStayMode() {
+  if (stayMobile.matches) {
+    window.addEventListener('scroll', onStayScroll, { passive: true });
+    updateCurrentStay();
+  } else {
+    window.removeEventListener('scroll', onStayScroll);
+    stayCards.forEach((card) => card.classList.remove('is-current'));
+  }
+}
+
+stayMobile.addEventListener('change', setStayMode);
+setStayMode();
