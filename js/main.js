@@ -6,7 +6,7 @@
    See README.md for the 5-minute setup. Until this is set, the
    form shows a friendly "not wired up yet" message instead of
    pretending to submit. */
-const SHEET_ENDPOINT = '';
+const SHEET_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzmWPMLU4BPAWvzAYXbNN_xNPJSmXB5h5CeO80jXuEUef5tYByh8Nsaku5kK-kqszLF7w/exec';
 
 /* ===== Mobile nav ===== */
 const navToggle = document.getElementById('navToggle');
